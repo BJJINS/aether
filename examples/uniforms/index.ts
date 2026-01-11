@@ -1,0 +1,105 @@
+import shader from "./shader.wgsl?raw";
+
+const rand = (min: number, max: number) => {
+  if (min === undefined) {
+    min = 0;
+    max = 1;
+  } else if (max === undefined) {
+    max = min;
+    min = 0;
+  }
+  return min + Math.random() * (max - min);
+};
+
+const adapter = await navigator?.gpu?.requestAdapter();
+const device = await adapter?.requestDevice();
+if (!device) {
+  throw new Error("Failed to request device");
+}
+const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+const context = canvas.getContext("webgpu")!;
+const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
+canvas.width = window.innerWidth * devicePixelRatio;
+canvas.height = window.innerHeight * devicePixelRatio;
+context.configure({
+  device,
+  format: presentationFormat,
+});
+
+const module = device.createShaderModule({
+  label: "vertex shader",
+  code: shader,
+});
+
+const pipeline = device.createRenderPipeline({
+  label: "hardcoded rgb triangle pipeline",
+  layout: "auto",
+  vertex: {
+    module,
+  },
+  fragment: {
+    module,
+    targets: [{ format: presentationFormat }],
+  },
+});
+
+const encoder = device.createCommandEncoder({
+  label: "render triangle encoder",
+});
+const pass = encoder.beginRenderPass({
+  label: "our basic canvas renderPass",
+  colorAttachments: [
+    {
+      view: context.getCurrentTexture().createView(),
+      clearValue: [0.3, 0.3, 0.3, 1],
+      loadOp: "clear",
+      storeOp: "store",
+    },
+  ],
+});
+pass.setPipeline(pipeline);
+
+const uniformOurBufferSize = 4 *  + 2 * 4 + 2 * 4;
+const uniformOtherBufferSize = 2 * 4;
+const kNumObjects = 100;
+
+for (let i = 0; i < kNumObjects; i++) {
+  const uniformOurBuffer = device.createBuffer({
+    label: `uniform ourStruct ${i}`,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    size: uniformOurBufferSize,
+  });
+  const uniformOtherBuffer = device.createBuffer({
+    label: `uniform otherStruct ${i}`,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    size: uniformOtherBufferSize,
+  });
+  const uniformOurValue = new Float32Array(uniformOurBufferSize * 0.25);
+  uniformOurValue.set([rand(0, 1), rand(0, 1), rand(0, 1)], 0);
+  uniformOurValue.set([rand(-1, 1), rand(-1, 1)], 4);
+
+  const uniformOtherValue = new Float32Array(uniformOtherBufferSize * 0.25);
+  uniformOtherValue.set([rand(0, 1), rand(0, 1)], 0);
+
+  device.queue.writeBuffer(uniformOurBuffer, 0, uniformOurValue);
+  device.queue.writeBuffer(uniformOtherBuffer, 0, uniformOtherValue);
+  const bindGroup = device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [
+      {
+        binding: 0,
+        resource: { buffer: uniformOurBuffer },
+      },
+      {
+        binding: 1,
+        resource: { buffer: uniformOtherBuffer },
+      },
+    ],
+  });
+  pass.setBindGroup(0, bindGroup);
+  pass.draw(3);
+}
+
+pass.end();
+const commandBuffer = encoder.finish();
+device.queue.submit([commandBuffer]);
