@@ -30,3 +30,4 @@ fn vs (@builtin(vertex_index) index: u32) -> OurVertexShaderOutput{
 fn fs (input: OurVertexShaderOutput)->@location(0) vec4f{
     return input.color;
 }
+
