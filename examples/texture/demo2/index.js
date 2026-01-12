@@ -153,6 +153,7 @@ async function main() {
 
         sampler = device.createSampler({
           minFilter: 'linear',
+          
         });
       }
 
