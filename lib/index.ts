@@ -77,6 +77,7 @@ export const initWebGpu = async (canvasId: string) => {
   context.configure({
     device: device,
     format: presentationFormat,
+    alphaMode: "premultiplied"
   });
   return {
     device,
