@@ -5,7 +5,24 @@ export class WebGPURender {
   context!: GPUCanvasContext;
   canvas!: HTMLCanvasElement;
 
-  constructor() {}
+  constructor(id: string, render: (ins: WebGPURender) => void) {
+    const main = async () => {
+      await this.init(id);
+      const observe = new ResizeObserver((entries) => {
+        for (let entry of entries) {
+          const canvas = entry.target as HTMLCanvasElement;
+          const width = entry.contentBoxSize[0].inlineSize;
+          const height = entry.contentBoxSize[0].blockSize;
+          canvas.width = Math.max(1, Math.min(width, this.device.limits.maxTextureDimension2D));
+          canvas.height = Math.max(1, Math.min(height, this.device.limits.maxTextureDimension2D));
+          render(this);
+        }
+      });
+
+      observe.observe(this.canvas);
+    };
+    main();
+  }
 
   async init(canvasId: string) {
     await this.handleDevice();
