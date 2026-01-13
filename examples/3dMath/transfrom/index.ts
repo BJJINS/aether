@@ -1,3 +1,4 @@
+import GUI from 'lil-gui';
 import { createEncoderAndPass, initWebGpu, resize } from "../../../lib";
 import { mat3 } from "../../../lib/mat";
 import shaderCode from "./shader.wgsl?raw";
@@ -94,16 +95,36 @@ const bindGroup = device.createBindGroup({
     ],
 });
 
-const translationMatrix = mat3.translate(0, 0);
-const rotationMatrix = mat3.rotation(61 / 180 * Math.PI);
-const scaleMatrix = mat3.scale(1.0, 1.0);
-const transformMatrix = mat3.multiply(translationMatrix,scaleMatrix);
-matrixValue.set([
-    ...transformMatrix.slice(0, 3), 0,
-    ...transformMatrix.slice(3, 6), 0,
-    ...transformMatrix.slice(6, 9), 0,
-]);
+const gui = new GUI({ title: 'WebGPU 参数调节' });
+const degToRad = (d: number) => d * Math.PI / 180;
+const settings = {
+    translationX: 0,
+    translationY: 0,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1,
+};
+
+gui.add(settings, 'translationX', -500, 500.0, 1).name('平移X');
+gui.add(settings, 'translationY', -500, 500.0, 1).name('平移Y');
+gui.add(settings, 'rotation', -360, 360.0, 0.01).name('旋转');
+gui.add(settings, 'scaleX', 0.1, 2.0, 0.01).name('缩放X');
+gui.add(settings, 'scaleY', 0.1, 2.0, 0.01).name('缩放Y');
+
+
+
 const render = () => {
+    const translationMatrix = mat3.translate(settings.translationX, settings.translationY);
+    const rotationMatrix = mat3.rotation(degToRad(settings.rotation));
+    const scaleMatrix = mat3.scale(settings.scaleX, settings.scaleY);
+    const transformMatrix = mat3.multiply(translationMatrix, mat3.multiply(scaleMatrix, rotationMatrix));
+    matrixValue.set([
+        ...transformMatrix.slice(0, 3), 0,
+        ...transformMatrix.slice(3, 6), 0,
+        ...transformMatrix.slice(6, 9), 0,
+    ]);
+
+
     const [encoder, pass] = createEncoderAndPass(device, context);
     resolutionValue.set([canvas.width, canvas.height]);
     device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
@@ -115,5 +136,7 @@ const render = () => {
     pass.end();
     device.queue.submit([encoder.finish()]);
 };
+
+gui.onChange(render);
 
 resize(device, canvas, render);
