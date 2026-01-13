@@ -1,5 +1,5 @@
 import { WebGPURender } from "../../../lib";
-import { generateMipmaps, loadImageBitmap, numMipmapLevels } from "../../../lib/mipmap";
+import { generateMipmaps, numMipmapLevels } from "../../../lib/mipmap";
 import shaderCode from "./shader.wgsl?raw";
 
 const size = 256;
@@ -81,31 +81,31 @@ new WebGPURender("canvas", (webGpuRender) => {
         }
     });
 
+    const texture = device.createTexture({
+        label: "mipmap texture",
+        format: "rgba8unorm",
+        mipLevelCount: numMipmapLevels(ctx.canvas.width, ctx.canvas.height),
+        size: [ctx.canvas.width, ctx.canvas.height, 1],
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+    });
+    const bindGroup = device.createBindGroup({
+        label: "mipmap bindGroup",
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [
+            {
+                binding: 0,
+                resource: texture.createView()
+            },
+            {
+                binding: 1,
+                resource: sampler
+            }
+        ]
+    });
 
     const renderer = (time: number) => {
         update2DCanvas(time);
 
-        const texture = device.createTexture({
-            label: "mipmap texture",
-            format: "rgba8unorm",
-            mipLevelCount: numMipmapLevels(ctx.canvas.width, ctx.canvas.height),
-            size: [ctx.canvas.width, ctx.canvas.height, 1],
-            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
-        });
-        const bindGroup = device.createBindGroup({
-            label: "mipmap bindGroup",
-            layout: pipeline.getBindGroupLayout(0),
-            entries: [
-                {
-                    binding: 0,
-                    resource: texture.createView()
-                },
-                {
-                    binding: 1,
-                    resource: sampler
-                }
-            ]
-        });
         device.queue.copyExternalImageToTexture({ source: ctx.canvas }, { texture }, [ctx.canvas.width, ctx.canvas.height, 1]);
         generateMipmaps(device, texture);
 
@@ -121,6 +121,5 @@ new WebGPURender("canvas", (webGpuRender) => {
     };
     requestAnimationFrame(renderer);
 });
-
 
 

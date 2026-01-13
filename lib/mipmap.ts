@@ -13,6 +13,18 @@ export const loadImageBitmap = async (url: string) => {
 const mipmapShaderModuleCache = new WeakMap<GPUDevice, GPUShaderModule>();
 const mipmapSamplerCache = new WeakMap<GPUDevice, GPUSampler>();
 const mipmapPipelineCache = new WeakMap<GPUDevice, Map<GPUTextureFormat, GPURenderPipeline>>();
+const mipmapPerTextureCache = new WeakMap<
+    GPUTexture,
+    {
+        format: GPUTextureFormat;
+        mipLevelCount: number;
+        pipeline: GPURenderPipeline;
+        mipViews: GPUTextureView[];
+        mipBindGroups: Array<GPUBindGroup | undefined>;
+        colorAttachment: GPURenderPassColorAttachment;
+        renderPassDescriptor: GPURenderPassDescriptor;
+    }
+>();
 
 
 const getMipmapShaderModule = (device: GPUDevice) => {
@@ -102,49 +114,63 @@ export const generateMipmaps = (device: GPUDevice, texture: GPUTexture) => {
     }
 
     const pipeline = getMipmapPipeline(device, texture.format);
-    const sampler = getMipmapSampler(device);
 
-    const mipViews = Array.from({ length: mipLevelCount }, (_, baseMipLevel) => {
-        return texture.createView({
-            baseMipLevel,
-            mipLevelCount: 1,
+    let cached = mipmapPerTextureCache.get(texture);
+    if (!cached || cached.mipLevelCount !== mipLevelCount || cached.format !== texture.format || cached.pipeline !== pipeline) {
+        const sampler = getMipmapSampler(device);
+        const mipViews = Array.from({ length: mipLevelCount }, (_, baseMipLevel) => {
+            return texture.createView({
+                baseMipLevel,
+                mipLevelCount: 1,
+            });
         });
-    });
 
-    const bindGroupLayout = pipeline.getBindGroupLayout(0);
-    const mipBindGroups = Array.from({ length: mipLevelCount }, (_, baseMipLevel) => {
-        if (baseMipLevel === 0) {
-            return undefined;
-        }
-        return device.createBindGroup({
-            label: `generate mipmaps bindGroup ${baseMipLevel}`,
-            layout: bindGroupLayout,
-            entries: [
-                { binding: 0, resource: sampler },
-                { binding: 1, resource: mipViews[baseMipLevel - 1] },
-            ],
+        const bindGroupLayout = pipeline.getBindGroupLayout(0);
+        const mipBindGroups = Array.from({ length: mipLevelCount }, (_, baseMipLevel) => {
+            if (baseMipLevel === 0) {
+                return undefined;
+            }
+            return device.createBindGroup({
+                label: `generate mipmaps bindGroup ${baseMipLevel}`,
+                layout: bindGroupLayout,
+                entries: [
+                    { binding: 0, resource: sampler },
+                    { binding: 1, resource: mipViews[baseMipLevel - 1] },
+                ],
+            });
         });
-    });
+
+        const colorAttachment: GPURenderPassColorAttachment = {
+            view: mipViews[0],
+            loadOp: "clear",
+            storeOp: "store",
+        };
+        const renderPassDescriptor: GPURenderPassDescriptor = {
+            label: "generate mipmaps pass",
+            colorAttachments: [colorAttachment],
+        };
+
+        cached = {
+            format: texture.format,
+            mipLevelCount,
+            pipeline,
+            mipViews,
+            mipBindGroups,
+            colorAttachment,
+            renderPassDescriptor,
+        };
+        mipmapPerTextureCache.set(texture, cached);
+    }
 
     const encoder = device.createCommandEncoder({
         label: "generate mipmaps encoder"
     });
 
-    const colorAttachment: GPURenderPassColorAttachment = {
-        view: mipViews[0],
-        loadOp: "clear",
-        storeOp: "store",
-    };
-    const renderPassDescriptor: GPURenderPassDescriptor = {
-        label: "generate mipmaps pass",
-        colorAttachments: [colorAttachment]
-    };
-
     for (let baseMipLevel = 1; baseMipLevel < mipLevelCount; baseMipLevel++) {
-        const bindGroup = mipBindGroups[baseMipLevel]!;
-        colorAttachment.view = mipViews[baseMipLevel];
-        const pass = encoder.beginRenderPass(renderPassDescriptor);
-        pass.setPipeline(pipeline);
+        const bindGroup = cached.mipBindGroups[baseMipLevel]!;
+        cached.colorAttachment.view = cached.mipViews[baseMipLevel];
+        const pass = encoder.beginRenderPass(cached.renderPassDescriptor);
+        pass.setPipeline(cached.pipeline);
         pass.setBindGroup(0, bindGroup);
         pass.draw(6);
         pass.end();
