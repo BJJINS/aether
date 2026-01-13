@@ -35,7 +35,7 @@ export const mat3 = {
             0, 0, 1
         ];
     },
-    multiply(a: Mat3, b: Mat3) {
+    multiply(a: Mat3, b: Mat3): Mat3 {
         const a00 = a[0 * 3 + 0];
         const a01 = a[0 * 3 + 1];
         const a02 = a[0 * 3 + 2];

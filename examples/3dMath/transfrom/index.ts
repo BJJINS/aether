@@ -1,4 +1,5 @@
 import { createEncoderAndPass, initWebGpu, resize } from "../../../lib";
+import { mat3 } from "../../../lib/mat";
 import shaderCode from "./shader.wgsl?raw";
 const { canvas, device, context, presentationFormat } = await initWebGpu("canvas");
 
@@ -70,7 +71,7 @@ const pipeline = device.createRenderPipeline({
     },
 });
 
-const uniformBufferSize = 4 * 4 + 2 * 4+ 2 * 4;
+const uniformBufferSize = (4 + 2 + 2 + 12) * 4;
 const uniformBuffer = device.createBuffer({
     label: 'uniforms',
     size: uniformBufferSize,
@@ -78,10 +79,11 @@ const uniformBuffer = device.createBuffer({
 });
 const kColorOffset = 0;
 const kResolutionOffset = 4;
+const kMatrixOffset = 8;
 const uniformValues = new Float32Array(uniformBufferSize / 4);
 const colorValue = uniformValues.subarray(kColorOffset, kColorOffset + 4);
 const resolutionValue = uniformValues.subarray(kResolutionOffset, kResolutionOffset + 2);
-// const matrixValue = uniformValues.subarray(kMatrixOffset, kMatrixOffset + 12);
+const matrixValue = uniformValues.subarray(kMatrixOffset, kMatrixOffset + 12);
 
 colorValue.set([Math.random(), Math.random(), Math.random(), 1]);
 const bindGroup = device.createBindGroup({
@@ -92,6 +94,15 @@ const bindGroup = device.createBindGroup({
     ],
 });
 
+const translationMatrix = mat3.translate(0, 0);
+const rotationMatrix = mat3.rotation(61 / 180 * Math.PI);
+const scaleMatrix = mat3.scale(1.0, 1.0);
+const transformMatrix = mat3.multiply(translationMatrix,scaleMatrix);
+matrixValue.set([
+    ...transformMatrix.slice(0, 3), 0,
+    ...transformMatrix.slice(3, 6), 0,
+    ...transformMatrix.slice(6, 9), 0,
+]);
 const render = () => {
     const [encoder, pass] = createEncoderAndPass(device, context);
     resolutionValue.set([canvas.width, canvas.height]);

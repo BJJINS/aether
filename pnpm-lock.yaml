@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      wgpu-matrix:
-        specifier: ^3.4.0
-        version: 3.4.0
     devDependencies:
       '@webgpu/types':
         specifier: ^0.1.68
@@ -400,9 +396,6 @@ packages:
       yaml:
         optional: true
 
-  wgpu-matrix@3.4.0:
-    resolution: {integrity: sha512-kXHrbAPKEn9A32Wf4wVldyx9MmnzwhuB5p8GCqoJP3ItU5+iDT4J3aTQwPZWkfb153hwGtqZtUwR2M+ipJKadg==}
-
 snapshots:
 
   '@esbuild/aix-ppc64@0.27.2':
@@ -648,5 +641,3 @@ snapshots:
       tinyglobby: 0.2.15
     optionalDependencies:
       fsevents: 2.3.3
-
-  wgpu-matrix@3.4.0: {}
