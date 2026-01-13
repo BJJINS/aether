@@ -80,10 +80,11 @@ export const initWebGpu = async (canvasId: string) => {
   });
   return {
     device,
+    canvas,
+    context,
     presentationFormat
   };
 };
-
 
 export const resize = (device: GPUDevice, canvas: HTMLCanvasElement, cb?: () => void) => {
   const observe = new ResizeObserver((entries) => {
@@ -100,3 +101,19 @@ export const resize = (device: GPUDevice, canvas: HTMLCanvasElement, cb?: () => 
   observe.observe(canvas);
 };
 
+export const createEncoderAndPass = (device: GPUDevice, context: GPUCanvasContext): [GPUCommandEncoder, GPURenderPassEncoder] => {
+  const encoder = device.createCommandEncoder({
+    label: "render triangle encoder",
+  });
+  const pass = encoder.beginRenderPass({
+    label: "our basic canvas renderPass",
+    colorAttachments: [
+      {
+        view: context.getCurrentTexture().createView(),
+        loadOp: "clear",
+        storeOp: "store",
+      },
+    ],
+  });
+  return [encoder, pass];
+};
