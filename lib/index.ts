@@ -64,3 +64,39 @@ export class WebGPURender {
     return { encoder, pass };
   }
 }
+
+export const initWebGpu = async (canvasId: string) => {
+  const adapter = await navigator?.gpu?.requestAdapter();
+  const device = await adapter?.requestDevice()!;
+  if (!device) {
+    throw "Failed to request device";
+  }
+  const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
+  const context = canvas.getContext("webgpu")!;
+  const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
+  context.configure({
+    device: device,
+    format: presentationFormat,
+  });
+  return {
+    device,
+    presentationFormat
+  };
+};
+
+
+export const resize = (device: GPUDevice, canvas: HTMLCanvasElement, cb?: () => void) => {
+  const observe = new ResizeObserver((entries) => {
+    for (let entry of entries) {
+      const canvas = entry.target as HTMLCanvasElement;
+      const width = entry.contentBoxSize[0].inlineSize;
+      const height = entry.contentBoxSize[0].blockSize;
+      canvas.width = Math.max(1, Math.min(width, device.limits.maxTextureDimension2D));
+      canvas.height = Math.max(1, Math.min(height, device.limits.maxTextureDimension2D));
+      cb && cb();
+    }
+  });
+
+  observe.observe(canvas);
+};
+
