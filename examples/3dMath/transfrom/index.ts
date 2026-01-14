@@ -208,7 +208,7 @@ const render = () => {
             bindGroup,
         } = obj;
         transformMatrix = mat3.multiply(transformMatrix, mat3.translate(-50, -75));
-        // transformMatrix = mat3.multiply(transformMatrix, scaleMatrix);
+        transformMatrix = mat3.multiply(scaleMatrix, transformMatrix);
         transformMatrix = mat3.multiply(rotationMatrix, transformMatrix);
         transformMatrix = mat3.multiply(mat3.translate(50, 75), transformMatrix);
         transformMatrix = mat3.multiply(translationMatrix, transformMatrix);
