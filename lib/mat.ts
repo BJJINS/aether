@@ -6,7 +6,7 @@ const mat4 = {
         dst[ 0] = 2 / width; dst[ 1] = 0;           dst[ 2] = 0;            dst[ 3] = 0;
         dst[ 4] = 0;         dst[ 5] = 2 / height;  dst[ 6] = 0;            dst[ 7] = 0;
         dst[ 8] = 0;         dst[ 9] = 0;           dst[10] = 1 / depth;    dst[11] = 0;
-        dst[12] = 0;         dst[13] = 0;           dst[14] = 0;            dst[15] = 1;
+        dst[12] = 0;         dst[13] = 0;           dst[14] = 0.5;            dst[15] = 1;
         return dst;
     },
     identity: (dst?: Float32Array) => {

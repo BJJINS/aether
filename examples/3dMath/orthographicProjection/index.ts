@@ -102,7 +102,7 @@ const bindGroup = device.createBindGroup({
 const setting = {
     translateX: 0,
     translateY: 0,
-    translateZ: 200,
+    translateZ: 0,
     rotateX: 0,
     rotateY: 0,
     rotateZ: 0,
