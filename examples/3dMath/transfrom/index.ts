@@ -1,3 +1,4 @@
+import GUI from "lil-gui";
 import { createEncoderAndPass, initWebGpu, resize } from "../../../lib";
 import { mat3 } from "../../../lib/mat";
 import shaderCode from "./shader.wgsl?raw";
@@ -94,16 +95,32 @@ const bindGroup = device.createBindGroup({
     ],
 });
 
-const translationMatrix = mat3.translate(0, 0);
-const rotationMatrix = mat3.rotation(61 / 180 * Math.PI);
-const scaleMatrix = mat3.scale(1.0, 1.0);
-const transformMatrix = mat3.multiply(translationMatrix,scaleMatrix);
-matrixValue.set([
-    ...transformMatrix.slice(0, 3), 0,
-    ...transformMatrix.slice(3, 6), 0,
-    ...transformMatrix.slice(6, 9), 0,
-]);
+
+const setting = {
+    translateX: 0,
+    translateY: 0,
+    rotate: 0,
+    scaleX: 1.0,
+    scaleY: 1.0,
+}
+
+const gui = new GUI();
+gui.add(setting, "translateX").min(-500).max(500).step(1)
+gui.add(setting, "translateY").min(-500).max(500).step(1)
+gui.add(setting, "rotate").min(-360).max(360).step(1)
+gui.add(setting, "scaleX").min(0.1).max(2.0).step(0.1)
+gui.add(setting, "scaleY").min(0.1).max(2.0).step(0.1)
+
 const render = () => {
+    const translationMatrix = mat3.translate(setting.translateX, setting.translateY);
+    const rotationMatrix = mat3.rotation(setting.rotate / 180 * Math.PI);
+    const scaleMatrix = mat3.scale(setting.scaleX, setting.scaleY);
+    const transformMatrix = mat3.multiply(translationMatrix, mat3.multiply(rotationMatrix, scaleMatrix));
+    matrixValue.set([
+        ...transformMatrix.slice(0, 3), 0,
+        ...transformMatrix.slice(3, 6), 0,
+        ...transformMatrix.slice(6, 9), 0,
+    ]);
     const [encoder, pass] = createEncoderAndPass(device, context);
     resolutionValue.set([canvas.width, canvas.height]);
     device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
@@ -115,5 +132,7 @@ const render = () => {
     pass.end();
     device.queue.submit([encoder.finish()]);
 };
+
+gui.onChange(render);
 
 resize(device, canvas, render);

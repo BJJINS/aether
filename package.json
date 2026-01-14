@@ -12,5 +12,8 @@
     "@webgpu/types": "^0.1.68",
     "typescript": "~5.9.3",
     "vite": "^7.2.4"
+  },
+  "dependencies": {
+    "lil-gui": "^0.21.0"
   }
 }

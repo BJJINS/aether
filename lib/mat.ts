@@ -30,8 +30,8 @@ export const mat3 = {
         const c = Math.cos(radians);
         const s = Math.sin(radians);
         return [
-            c, c, 0,
-            -s, s, 0,
+            c, s, 0,
+            -s, c, 0,
             0, 0, 1
         ];
     },
