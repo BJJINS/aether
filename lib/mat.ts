@@ -1,70 +1,84 @@
-type Mat3 = [
-    number, number, number,
-    number, number, number,
-    number, number, number,
-];
 
-export const mat3 = {
-    identity(): Mat3 {
-        return [
-            1, 0, 0,
-            0, 1, 0,
-            0, 0, 1
-        ];
+const mat4 = {
+    identity: (dst?: Float32Array) => {
+        dst ??= new Float32Array(16);
+        dst[ 0] = 1; dst[ 1] = 0; dst[ 2] = 0; dst[ 3] = 0;
+        dst[ 4] = 0; dst[ 5] = 1; dst[ 6] = 0; dst[ 7] = 0; 
+        dst[ 8] = 0; dst[ 9] = 0; dst[10] = 1; dst[11] = 0;
+        dst[12] = 0; dst[13] = 0; dst[14] = 0; dst[15] = 1;
+        return dst;
     },
-    scale(x: number, y: number): Mat3 {
-        return [
-            x, 0, 0,
-            0, y, 0,
-            0, 0, 1
-        ];
+    multiply: (a: Float32Array, b: Float32Array, dst?: Float32Array) => {
+        dst ??= new Float32Array(16);
+        dst[ 0] = a[ 0] * b[0] + a[ 1] * b[4] + a[ 2] * b[ 8] + a[ 3] * b[12];
+        dst[ 1] = a[ 0] * b[1] + a[ 1] * b[5] + a[ 2] * b[ 9] + a[ 3] * b[13];
+        dst[ 2] = a[ 0] * b[2] + a[ 1] * b[6] + a[ 2] * b[10] + a[ 3] * b[14];
+        dst[ 3] = a[ 0] * b[3] + a[ 1] * b[7] + a[ 2] * b[11] + a[ 3] * b[15];  
+
+        dst[ 4] = a[ 4] * b[0] + a[ 5] * b[4] + a[ 6] * b[ 8] + a[ 7] * b[12];
+        dst[ 5] = a[ 4] * b[1] + a[ 5] * b[5] + a[ 6] * b[ 9] + a[ 7] * b[13];
+        dst[ 6] = a[ 4] * b[2] + a[ 5] * b[6] + a[ 6] * b[10] + a[ 7] * b[14];
+        dst[ 7] = a[ 4] * b[3] + a[ 5] * b[7] + a[ 6] * b[11] + a[ 7] * b[15];
+
+        dst[ 8] = a[ 8] * b[0] + a[ 9] * b[4] + a[10] * b[ 8] + a[11] * b[12];
+        dst[ 9] = a[ 8] * b[1] + a[ 9] * b[5] + a[10] * b[ 9] + a[11] * b[13];
+        dst[10] = a[ 8] * b[2] + a[ 9] * b[6] + a[10] * b[10] + a[11] * b[14];
+        dst[11] = a[ 8] * b[3] + a[ 9] * b[7] + a[10] * b[11] + a[11] * b[15];
+
+        dst[12] = a[12] * b[0] + a[13] * b[4] + a[14] * b[ 8] + a[15] * b[12];
+        dst[13] = a[12] * b[1] + a[13] * b[5] + a[14] * b[ 9] + a[15] * b[13];
+        dst[14] = a[12] * b[2] + a[13] * b[6] + a[14] * b[10] + a[15] * b[14];
+        dst[15] = a[12] * b[3] + a[13] * b[7] + a[14] * b[11] + a[15] * b[15];
+
+        return dst;
     },
-    translate(x: number, y: number,): Mat3 {
-        return [
-            1, 0, 0,
-            0, 1, 0,
-            x, y, 1
-        ];
+    translation(tx: number, ty: number, tz: number, dst?: Float32Array) {
+        dst ??= new Float32Array(16);
+        dst[ 0] = 1;   dst[ 1] = 0;   dst[ 2] = 0;   dst[ 3] = 0;
+        dst[ 4] = 0;   dst[ 5] = 1;   dst[ 6] = 0;   dst[ 7] = 0;
+        dst[ 8] = 0;   dst[ 9] = 0;   dst[10] = 1;   dst[11] = 0;
+        dst[12] = tx;  dst[13] = ty;  dst[14] = tz;  dst[15] = 1;
+        return dst;
     },
-    rotation(radians: number): Mat3 {
+    rotationZ(radians: number, dst?: Float32Array) {
         const c = Math.cos(radians);
         const s = Math.sin(radians);
-        return [
-            c, s, 0,
-            -s, c, 0,
-            0, 0, 1
-        ];
+        dst = dst || new Float32Array(16);
+        dst[ 0] = c;   dst[ 1] = s;  dst[ 2] = 0;  dst[ 3] = 0;
+        dst[ 4] = -s;  dst[ 5] = c;  dst[ 6] = 0;  dst[ 7] = 0;
+        dst[ 8] = 0;   dst[ 9] = 0;  dst[10] = 1;  dst[11] = 0;
+        dst[12] = 0;   dst[13] = 0;  dst[14] = 0;  dst[15] = 1;
+        return dst;
     },
-    multiply(a: Mat3, b: Mat3): Mat3 {
-        const a00 = a[0 * 3 + 0];
-        const a01 = a[0 * 3 + 1];
-        const a02 = a[0 * 3 + 2];
-        const a10 = a[1 * 3 + 0];
-        const a11 = a[1 * 3 + 1];
-        const a12 = a[1 * 3 + 2];
-        const a20 = a[2 * 3 + 0];
-        const a21 = a[2 * 3 + 1];
-        const a22 = a[2 * 3 + 2];
-        const b00 = b[0 * 3 + 0];
-        const b01 = b[0 * 3 + 1];
-        const b02 = b[0 * 3 + 2];
-        const b10 = b[1 * 3 + 0];
-        const b11 = b[1 * 3 + 1];
-        const b12 = b[1 * 3 + 2];
-        const b20 = b[2 * 3 + 0];
-        const b21 = b[2 * 3 + 1];
-        const b22 = b[2 * 3 + 2];
-
-        return [
-            b00 * a00 + b01 * a10 + b02 * a20,
-            b00 * a01 + b01 * a11 + b02 * a21,
-            b00 * a02 + b01 * a12 + b02 * a22,
-            b10 * a00 + b11 * a10 + b12 * a20,
-            b10 * a01 + b11 * a11 + b12 * a21,
-            b10 * a02 + b11 * a12 + b12 * a22,
-            b20 * a00 + b21 * a10 + b22 * a20,
-            b20 * a01 + b21 * a11 + b22 * a21,
-            b20 * a02 + b21 * a12 + b22 * a22,
-        ];
-    }
+    rotationX(radians: number, dst?: Float32Array) {
+        const c = Math.cos(radians);
+        const s = Math.sin(radians);
+        dst = dst || new Float32Array(16);
+        dst[ 0] = 1;  dst[ 1] = 0;   dst[ 2] = 0;  dst[ 3] = 0;
+        dst[ 4] = 0;  dst[ 5] = c;   dst[ 6] = s;  dst[ 7] = 0;
+        dst[ 8] = 0;  dst[ 9] = -s;  dst[10] = c;  dst[11] = 0;
+        dst[12] = 0;  dst[13] = 0;   dst[14] = 0;  dst[15] = 1;
+        return dst;
+    },
+    rotationY(radians: number, dst?: Float32Array) {
+        const c = Math.cos(radians);
+        const s = Math.sin(radians);
+        dst = dst || new Float32Array(16);
+        dst[ 0] = c;  dst[ 1] = 0;  dst[ 2] = -s;  dst[ 3] = 0;
+        dst[ 4] = 0;  dst[ 5] = 1;  dst[ 6] = 0;  dst[ 7] = 0;
+        dst[ 8] = s;  dst[ 9] = 0;  dst[10] = c;  dst[11] = 0;
+        dst[12] = 0;  dst[13] = 0;  dst[14] = 0;  dst[15] = 1;
+        return dst;
+    },
+    scaling(sx: number, sy: number, sz: number, dst?: Float32Array) {
+        dst = dst || new Float32Array(16);
+        dst[ 0] = sx;  dst[ 1] = 0;   dst[ 2] = 0;    dst[ 3] = 0;
+        dst[ 4] = 0;   dst[ 5] = sy;  dst[ 6] = 0;    dst[ 7] = 0;
+        dst[ 8] = 0;   dst[ 9] = 0;   dst[10] = sz;   dst[11] = 0;
+        dst[12] = 0;   dst[13] = 0;   dst[14] = 0;    dst[15] = 1;
+        return dst;
+    },
 };
+
+
+export default mat4;
