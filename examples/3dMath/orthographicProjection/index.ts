@@ -22,12 +22,49 @@ const vertexData = new Float32Array([
     30, -90, 0,
     70, -60, 0,
     70, -90, 0,
+
+    // left column
+    0, 0, 30,
+    0, -150, 30,
+    30, 0, 30,
+    30, -150, 30,
+
+    // top rung
+    30, 0, 30,
+    30, -30, 30,
+    100, 0, 30,
+    100, -30, 30,
+
+    // middle rung
+    30, -60, 30,
+    30, -90, 30,
+    70, -60, 30,
+    70, -90, 30,
 ]);
 
 const indexData = new Uint16Array([
+    // front face
     0, 1, 2, 2, 1, 3,  // left column
-    4, 5, 6, 6, 5, 7,  // top run
-    8, 9, 10, 10, 9, 11,  // middle run
+    4, 5, 6, 6, 5, 7,  // top rung
+    8, 9, 10, 10, 9, 11,  // middle rung
+
+    // back face
+    12, 14, 13, 14, 15, 13,  // left column
+    16, 18, 17, 18, 19, 17,  // top rung
+    20, 22, 21, 22, 23, 21,  // middle rung
+
+    // sides
+    0, 12, 13, 0, 13, 1,    // left
+    1, 13, 15, 1, 15, 3,    // bottom
+    3, 15, 21, 3, 21, 9,    // right (bottom)
+    9, 21, 23, 9, 23, 11,   // middle rung bottom
+    11, 23, 22, 11, 22, 10, // middle rung right
+    10, 22, 20, 10, 20, 8,  // middle rung top
+    8, 20, 17, 8, 17, 5,    // right (middle)
+    5, 17, 19, 5, 19, 7,    // top rung bottom
+    7, 19, 18, 7, 18, 6,    // top rung right
+    6, 18, 16, 6, 16, 4,    // top rung top
+    4, 16, 12, 4, 12, 0,    // left column top
 ]);
 
 const vertexBuffer = device.createBuffer({
