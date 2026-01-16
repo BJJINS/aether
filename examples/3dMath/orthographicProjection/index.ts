@@ -163,7 +163,9 @@ const uniformBuffer = device.createBuffer({
 const uniformValues = new Float32Array(uniformBufferSize / 4);
 
 const aspect = canvas.width / canvas.height;
-const projectionMatrix = mat4.projection(500, aspect, 400);
+const w = 400;
+const h = w / aspect;
+const projectionMatrix = mat4.ortho(-w, w, -h, h, -400, 400);
 
 
 const bindGroup = device.createBindGroup({

@@ -1,19 +1,31 @@
 
 const mat4 = {
+    // left < 0, right > 0, bottom < 0, top > 0, near > 0, far > 0
+    ortho: (left: number, right: number, bottom: number, top: number, near: number, far: number, dst?: Float32Array) => {
+        dst ??= new Float32Array(16);
+        const w = right - left;
+        const h = top - bottom;
+        const d = far - near;
+        dst[ 0] = 2 / w;               dst[ 1] = 0;                   dst[ 2] = 0;           dst[ 3] = 0;
+        dst[ 4] = 0;                   dst[ 5] = 2 / h;               dst[ 6] = 0;           dst[ 7] = 0;
+        dst[ 8] = 0;                   dst[ 9] = 0;                   dst[10] = 1 / (d);     dst[11] = 0;
+        dst[12] = -(right + left) / w; dst[13] = -(top + bottom) / h; dst[14] = -near / (d); dst[15] = 1;
+        return dst;
+    },
     projection: (width: number, aspect: number, depth: number, dst?: Float32Array) => {
         dst ??= new Float32Array(16);
         const height = width * aspect;
-        dst[ 0] = 2 / width; dst[ 1] = 0;           dst[ 2] = 0;            dst[ 3] = 0;
-        dst[ 4] = 0;         dst[ 5] = 2 / height;  dst[ 6] = 0;            dst[ 7] = 0;
-        dst[ 8] = 0;         dst[ 9] = 0;           dst[10] = 1 / depth;    dst[11] = 0;
-        dst[12] = 0;         dst[13] = 0;           dst[14] = 0.5;            dst[15] = 1;
+        dst[0] = 2 / width; dst[1] = 0; dst[2] = 0; dst[3] = 0;
+        dst[4] = 0; dst[5] = 2 / height; dst[6] = 0; dst[7] = 0;
+        dst[8] = 0; dst[9] = 0; dst[10] = 1 / depth; dst[11] = 0;
+        dst[12] = 0; dst[13] = 0; dst[14] = 0.5; dst[15] = 1;
         return dst;
     },
     identity: (dst?: Float32Array) => {
         dst ??= new Float32Array(16);
-        dst[ 0] = 1; dst[ 1] = 0; dst[ 2] = 0; dst[ 3] = 0;
-        dst[ 4] = 0; dst[ 5] = 1; dst[ 6] = 0; dst[ 7] = 0; 
-        dst[ 8] = 0; dst[ 9] = 0; dst[10] = 1; dst[11] = 0;
+        dst[0] = 1; dst[1] = 0; dst[2] = 0; dst[3] = 0;
+        dst[4] = 0; dst[5] = 1; dst[6] = 0; dst[7] = 0;
+        dst[8] = 0; dst[9] = 0; dst[10] = 1; dst[11] = 0;
         dst[12] = 0; dst[13] = 0; dst[14] = 0; dst[15] = 1;
         return dst;
     },
@@ -77,48 +89,48 @@ const mat4 = {
     },
     translation(tx: number, ty: number, tz: number, dst?: Float32Array) {
         dst ??= new Float32Array(16);
-        dst[ 0] = 1;   dst[ 1] = 0;   dst[ 2] = 0;   dst[ 3] = 0;
-        dst[ 4] = 0;   dst[ 5] = 1;   dst[ 6] = 0;   dst[ 7] = 0;
-        dst[ 8] = 0;   dst[ 9] = 0;   dst[10] = 1;   dst[11] = 0;
-        dst[12] = tx;  dst[13] = ty;  dst[14] = tz;  dst[15] = 1;
+        dst[0] = 1; dst[1] = 0; dst[2] = 0; dst[3] = 0;
+        dst[4] = 0; dst[5] = 1; dst[6] = 0; dst[7] = 0;
+        dst[8] = 0; dst[9] = 0; dst[10] = 1; dst[11] = 0;
+        dst[12] = tx; dst[13] = ty; dst[14] = tz; dst[15] = 1;
         return dst;
     },
     rotationZ(radians: number, dst?: Float32Array) {
         const c = Math.cos(radians);
         const s = Math.sin(radians);
         dst = dst || new Float32Array(16);
-        dst[ 0] = c;   dst[ 1] = s;  dst[ 2] = 0;  dst[ 3] = 0;
-        dst[ 4] = -s;  dst[ 5] = c;  dst[ 6] = 0;  dst[ 7] = 0;
-        dst[ 8] = 0;   dst[ 9] = 0;  dst[10] = 1;  dst[11] = 0;
-        dst[12] = 0;   dst[13] = 0;  dst[14] = 0;  dst[15] = 1;
+        dst[0] = c; dst[1] = s; dst[2] = 0; dst[3] = 0;
+        dst[4] = -s; dst[5] = c; dst[6] = 0; dst[7] = 0;
+        dst[8] = 0; dst[9] = 0; dst[10] = 1; dst[11] = 0;
+        dst[12] = 0; dst[13] = 0; dst[14] = 0; dst[15] = 1;
         return dst;
     },
     rotationX(radians: number, dst?: Float32Array) {
         const c = Math.cos(radians);
         const s = Math.sin(radians);
         dst = dst || new Float32Array(16);
-        dst[ 0] = 1;  dst[ 1] = 0;   dst[ 2] = 0;  dst[ 3] = 0;
-        dst[ 4] = 0;  dst[ 5] = c;   dst[ 6] = s;  dst[ 7] = 0;
-        dst[ 8] = 0;  dst[ 9] = -s;  dst[10] = c;  dst[11] = 0;
-        dst[12] = 0;  dst[13] = 0;   dst[14] = 0;  dst[15] = 1;
+        dst[0] = 1; dst[1] = 0; dst[2] = 0; dst[3] = 0;
+        dst[4] = 0; dst[5] = c; dst[6] = s; dst[7] = 0;
+        dst[8] = 0; dst[9] = -s; dst[10] = c; dst[11] = 0;
+        dst[12] = 0; dst[13] = 0; dst[14] = 0; dst[15] = 1;
         return dst;
     },
     rotationY(radians: number, dst?: Float32Array) {
         const c = Math.cos(radians);
         const s = Math.sin(radians);
         dst = dst || new Float32Array(16);
-        dst[ 0] = c;  dst[ 1] = 0;  dst[ 2] = -s;  dst[ 3] = 0;
-        dst[ 4] = 0;  dst[ 5] = 1;  dst[ 6] = 0;  dst[ 7] = 0;
-        dst[ 8] = s;  dst[ 9] = 0;  dst[10] = c;  dst[11] = 0;
-        dst[12] = 0;  dst[13] = 0;  dst[14] = 0;  dst[15] = 1;
+        dst[0] = c; dst[1] = 0; dst[2] = -s; dst[3] = 0;
+        dst[4] = 0; dst[5] = 1; dst[6] = 0; dst[7] = 0;
+        dst[8] = s; dst[9] = 0; dst[10] = c; dst[11] = 0;
+        dst[12] = 0; dst[13] = 0; dst[14] = 0; dst[15] = 1;
         return dst;
     },
     scaling(sx: number, sy: number, sz: number, dst?: Float32Array) {
         dst = dst || new Float32Array(16);
-        dst[ 0] = sx;  dst[ 1] = 0;   dst[ 2] = 0;    dst[ 3] = 0;
-        dst[ 4] = 0;   dst[ 5] = sy;  dst[ 6] = 0;    dst[ 7] = 0;
-        dst[ 8] = 0;   dst[ 9] = 0;   dst[10] = sz;   dst[11] = 0;
-        dst[12] = 0;   dst[13] = 0;   dst[14] = 0;    dst[15] = 1;
+        dst[0] = sx; dst[1] = 0; dst[2] = 0; dst[3] = 0;
+        dst[4] = 0; dst[5] = sy; dst[6] = 0; dst[7] = 0;
+        dst[8] = 0; dst[9] = 0; dst[10] = sz; dst[11] = 0;
+        dst[12] = 0; dst[13] = 0; dst[14] = 0; dst[15] = 1;
         return dst;
     },
 };
