@@ -90,11 +90,12 @@ export const initWebGpu = async (canvasId: string) => {
 export const resize = (device: GPUDevice, canvas: HTMLCanvasElement, cb?: () => void) => {
   const observe = new ResizeObserver((entries) => {
     for (let entry of entries) {
+      const devicePixelRatio = Math.min(window.devicePixelRatio, 2);
       const canvas = entry.target as HTMLCanvasElement;
       const width = entry.contentBoxSize[0].inlineSize;
       const height = entry.contentBoxSize[0].blockSize;
-      canvas.width = Math.max(1, Math.min(width, device.limits.maxTextureDimension2D));
-      canvas.height = Math.max(1, Math.min(height, device.limits.maxTextureDimension2D));
+      canvas.width = Math.max(1, Math.min(width, device.limits.maxTextureDimension2D) * devicePixelRatio);
+      canvas.height = Math.max(1, Math.min(height, device.limits.maxTextureDimension2D) * devicePixelRatio);
       cb && cb();
     }
   });
