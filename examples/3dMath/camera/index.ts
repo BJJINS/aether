@@ -154,49 +154,43 @@ const pipeline = device.createRenderPipeline({
         format: "depth24plus"
     }
 });
-const uniformBufferSize = (16) * 4;
+
+const fNum = 5;
+const uniformBufferSize = 16 * 4;
 const uniformBuffer = device.createBuffer({
     label: `uniforms`,
     size: uniformBufferSize,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
 });
 const uniformValues = new Float32Array(uniformBufferSize / 4);
-
 const aspect = canvas.width / canvas.height;
-const projectionMatrix = mat4.perspective(Math.PI / 3, aspect, 10 , 1000)
 
+
+const translateUniformBufferSize = 16 * 4 * fNum;
+const translateUniformBuffer = device.createBuffer({
+    label: `translate uniforms`,
+    size: translateUniformBufferSize,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+});
+const translateUniformValues = new Float32Array(translateUniformBufferSize / 4);
+
+for (let i = 0; i < fNum; i++) {
+    const translateX = Math.random() * 500 - 300;
+    const translateY = Math.random() * 200;
+    const translateZ = Math.random() * 500 + 200;
+    const modelMatrix = mat4.translation(translateX, translateY, translateZ);
+    translateUniformValues.set(modelMatrix, i * 16);
+}
+device.queue.writeBuffer(translateUniformBuffer, 0, translateUniformValues);
 
 const bindGroup = device.createBindGroup({
     label: `bind group for object`,
     layout: pipeline.getBindGroupLayout(0),
     entries: [
         { binding: 0, resource: { buffer: uniformBuffer } },
+        { binding: 1, resource: { buffer: translateUniformBuffer } },
     ],
 });
-
-
-const setting = {
-    translateX: 0,
-    translateY: 0,
-    translateZ: 200,
-    rotateX: 0,
-    rotateY: 0,
-    rotateZ: 0,
-    scaleX: 1,
-    scaleY: 1,
-};
-
-const gui = new GUI();
-gui.add(setting, "translateX").min(-500).max(500).step(1);
-gui.add(setting, "translateY").min(-500).max(500).step(1);
-gui.add(setting, "translateZ").min(-500).max(500).step(1);
-gui.add(setting, "rotateX").min(-180).max(180).step(0.1);
-gui.add(setting, "rotateY").min(-180).max(180).step(0.1);
-gui.add(setting, "rotateZ").min(-180).max(180).step(0.1);
-gui.add(setting, "scaleX").min(0.1).max(5).step(0.1);
-gui.add(setting, "scaleY").min(0.1).max(5).step(0.1);
-
-
 
 let depthTexture: GPUTexture;
 const colorAttachment: any = {
@@ -214,14 +208,22 @@ const renderPassDescriptor: any = {
     }
 };
 
+const setting = {
+    fov: 100,
+    cameraAngle: 0,
+};
+
+const gui = new GUI();
+gui.add(setting, "fov", 0, 180);
+gui.add(setting, "cameraAngle", 0, 360);
+
 
 const render = () => {
-    const translateMatrix = mat4.translation(setting.translateX, setting.translateY, setting.translateZ);
-    const rotationXY = mat4.multiply(mat4.rotationX(setting.rotateX / 180 * Math.PI), mat4.rotationY(setting.rotateY / 180 * Math.PI));
-    const rotateMatrix = mat4.multiply(rotationXY, mat4.rotationZ(setting.rotateZ / 180 * Math.PI), rotationXY);
-    const scaleMatrix = mat4.scaling(setting.scaleX, setting.scaleY, 1);
-    const modelMatrix = mat4.multiply(projectionMatrix, mat4.multiply(translateMatrix, mat4.multiply(rotateMatrix, scaleMatrix)));
-    uniformValues.set(modelMatrix);
+    const projectionMatrix = mat4.perspective(setting.fov / 180 * Math.PI, aspect, 10, 1000);
+    uniformValues.set(projectionMatrix);
+    device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
+
+
 
     const canvasTexture = context.getCurrentTexture();
     if (!depthTexture || depthTexture.width !== canvasTexture.width || depthTexture.height !== canvasTexture.height) {
@@ -244,16 +246,11 @@ const render = () => {
     const pass = encoder.beginRenderPass(renderPassDescriptor as GPURenderPassDescriptor);
     pass.setPipeline(pipeline);
     pass.setVertexBuffer(0, vertexBuffer);
-
-    device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
     pass.setBindGroup(0, bindGroup);
-    pass.draw(numVertices);
+    pass.draw(numVertices, fNum);
     pass.end();
     device.queue.submit([encoder.finish()]);
 };
 
-gui.onChange(() => {
-    render();
-});
-
+gui.onChange(render)
 resize(device, canvas, render);
