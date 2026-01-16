@@ -7,8 +7,8 @@ const { canvas, device, context, presentationFormat } = await initWebGpu("canvas
 const positions = [
     // left column
     0, 0, 0,
-    0, -100, 0, // 1
-    30, -100, 0, // 2
+    0, -150, 0, // 1
+    30, -150, 0, // 2
     30, 0, 0, // 3
 
     // top rung
@@ -19,14 +19,14 @@ const positions = [
 
     // middle rung
     30, -50, 0, //8
-    30, -70, 0,
-    60, -70, 0,
+    30, -80, 0,
+    60, -80, 0,
     60, -50, 0, // 11
 
     // left column
     0, 0, 30, // 12
-    0, -100, 30, //13
-    30, -100, 30, // 14
+    0, -150, 30, //13
+    30, -150, 30, // 14
     30, 0, 30,
 
     // top rung
@@ -37,8 +37,8 @@ const positions = [
 
     // middle rung
     30, -50, 30, // 20
-    30, -70, 30,
-    60, -70, 30,
+    30, -80, 30,
+    60, -80, 30,
     60, -50, 30, // 23
 ];
 
@@ -154,7 +154,7 @@ const pipeline = device.createRenderPipeline({
         format: "depth24plus"
     }
 });
-const uniformBufferSize = 16 * 4;
+const uniformBufferSize = (16) * 4;
 const uniformBuffer = device.createBuffer({
     label: `uniforms`,
     size: uniformBufferSize,
@@ -163,9 +163,7 @@ const uniformBuffer = device.createBuffer({
 const uniformValues = new Float32Array(uniformBufferSize / 4);
 
 const aspect = canvas.width / canvas.height;
-const w = 400;
-const h = w / aspect;
-const projectionMatrix = mat4.ortho(-w, w, -h, h, -400, 400);
+const projectionMatrix = mat4.perspective(Math.PI / 3, aspect, 10 , 1000)
 
 
 const bindGroup = device.createBindGroup({
@@ -180,7 +178,7 @@ const bindGroup = device.createBindGroup({
 const setting = {
     translateX: 0,
     translateY: 0,
-    translateZ: 0,
+    translateZ: 200,
     rotateX: 0,
     rotateY: 0,
     rotateZ: 0,
@@ -195,8 +193,9 @@ gui.add(setting, "translateZ").min(-500).max(500).step(1);
 gui.add(setting, "rotateX").min(-180).max(180).step(0.1);
 gui.add(setting, "rotateY").min(-180).max(180).step(0.1);
 gui.add(setting, "rotateZ").min(-180).max(180).step(0.1);
-gui.add(setting, "scaleX").min(0.1).max(2).step(0.1);
-gui.add(setting, "scaleY").min(0.1).max(2).step(0.1);
+gui.add(setting, "scaleX").min(0.1).max(5).step(0.1);
+gui.add(setting, "scaleY").min(0.1).max(5).step(0.1);
+
 
 
 let depthTexture: GPUTexture;

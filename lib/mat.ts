@@ -6,19 +6,20 @@ const mat4 = {
         const w = right - left;
         const h = top - bottom;
         const d = far - near;
-        dst[ 0] = 2 / w;               dst[ 1] = 0;                   dst[ 2] = 0;           dst[ 3] = 0;
-        dst[ 4] = 0;                   dst[ 5] = 2 / h;               dst[ 6] = 0;           dst[ 7] = 0;
-        dst[ 8] = 0;                   dst[ 9] = 0;                   dst[10] = 1 / (d);     dst[11] = 0;
+        dst[0] = 2 / w; dst[1] = 0; dst[2] = 0; dst[3] = 0;
+        dst[4] = 0; dst[5] = 2 / h; dst[6] = 0; dst[7] = 0;
+        dst[8] = 0; dst[9] = 0; dst[10] = 1 / (d); dst[11] = 0;
         dst[12] = -(right + left) / w; dst[13] = -(top + bottom) / h; dst[14] = -near / (d); dst[15] = 1;
         return dst;
     },
-    projection: (width: number, aspect: number, depth: number, dst?: Float32Array) => {
+    perspective: (fov: number, aspect: number, near: number, far: number, dst?: Float32Array) => {
         dst ??= new Float32Array(16);
-        const height = width * aspect;
-        dst[0] = 2 / width; dst[1] = 0; dst[2] = 0; dst[3] = 0;
-        dst[4] = 0; dst[5] = 2 / height; dst[6] = 0; dst[7] = 0;
-        dst[8] = 0; dst[9] = 0; dst[10] = 1 / depth; dst[11] = 0;
-        dst[12] = 0; dst[13] = 0; dst[14] = 0.5; dst[15] = 1;
+        const f = Math.tan(fov * 0.5);
+        const rangeInv = 1.0 / (far - near);
+        dst[0] = 1 / (f * aspect);  dst[1] = 0;                 dst[2] = 0;                         dst[3] = 0;
+        dst[4] = 0;                 dst[5] = 1 / f;             dst[6] = 0;                         dst[7] = 0;
+        dst[8] = 0;                 dst[9] = 0;                 dst[10] = far * rangeInv;           dst[11] = 1;
+        dst[12] = 0;                dst[13] = 0;                dst[14] = -near * far * rangeInv;   dst[15] = 0;
         return dst;
     },
     identity: (dst?: Float32Array) => {
