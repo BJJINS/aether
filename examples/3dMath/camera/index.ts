@@ -178,7 +178,7 @@ for (let i = 0; i < fNum; i++) {
     const translateX = Math.random() * 500 - 300;
     const translateY = Math.random() * 200;
     const translateZ = Math.random() * 500 + 200;
-    const modelMatrix = mat4.translation(translateX, translateY, translateZ);
+    const modelMatrix = mat4.translation(translateX, translateY, 0);
     translateUniformValues.set(modelMatrix, i * 16);
 }
 device.queue.writeBuffer(translateUniformBuffer, 0, translateUniformValues);
@@ -210,17 +210,21 @@ const renderPassDescriptor: any = {
 
 const setting = {
     fov: 100,
-    cameraAngle: 0,
+    cameraAngle: 100,
 };
 
 const gui = new GUI();
 gui.add(setting, "fov", 0, 180);
 gui.add(setting, "cameraAngle", 0, 360);
 
-
+const radius = 200;
 const render = () => {
     const projectionMatrix = mat4.perspective(setting.fov / 180 * Math.PI, aspect, 10, 1000);
-    uniformValues.set(projectionMatrix);
+    const cameraMatrix = mat4.multiply(mat4.translation(0, 0, -radius * 1.5), mat4.rotationY(setting.cameraAngle / 180 * Math.PI));
+    const viewMatrix = mat4.inverse(cameraMatrix);
+    const viewProjectionMatrix = mat4.multiply(projectionMatrix, viewMatrix);
+
+    uniformValues.set(viewProjectionMatrix);
     device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
 
 
